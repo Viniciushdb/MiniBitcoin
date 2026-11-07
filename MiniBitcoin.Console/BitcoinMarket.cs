@@ -4,6 +4,9 @@ public class BitcoinMarket
 {
     private readonly Wallet wallet;
     private decimal quote;
+    private readonly List<Transaction> history = new();
+    public IReadOnlyList<Transaction> History => history.AsReadOnly();
+    public decimal PortfolioValue => wallet.Brl + wallet.Bitcoin * Quote;
     public decimal Quote
     {
         get => quote;
@@ -28,6 +31,7 @@ public class BitcoinMarket
         if (btc <= 0) throw new ArgumentOutOfRangeException(nameof(brl), "O mínimo é um satoshi.");
         decimal cost = btc * Quote;
         wallet.ApplyTrade(wallet.Brl - cost, wallet.Bitcoin + btc);
+        history.Add(new Transaction("Compra", btc, cost, Quote, DateTimeOffset.UtcNow));
     }
 
     public void Sell(decimal btc)
@@ -36,5 +40,6 @@ public class BitcoinMarket
             throw new ArgumentOutOfRangeException(nameof(btc), "Valor inválido ou saldo BTC insuficiente (máximo de 8 casas decimais).");
         decimal proceeds = btc * Quote;
         wallet.ApplyTrade(wallet.Brl + proceeds, wallet.Bitcoin - btc);
+        history.Add(new Transaction("Venda", btc, proceeds, Quote, DateTimeOffset.UtcNow));
     }
 }
